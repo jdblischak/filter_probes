@@ -2,6 +2,7 @@
 
 # Install:
 #   -bwa
+#   -liftOver
 
 # Download:
 #   -HapMap CEU genotypes
@@ -18,6 +19,11 @@ git clone https://github.com/lh3/bwa.git
 cd bwa
 make
 cd ..
+
+# Install liftOver
+wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/liftOver
+chmod +x liftOver
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz
 
 cd ..
 
