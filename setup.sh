@@ -2,7 +2,6 @@
 
 # Install:
 #   -bwa
-#   -bedtools
 
 # Download:
 #   -HapMap CEU genotypes
@@ -17,12 +16,6 @@ cd software
 # Install bwa
 git clone https://github.com/lh3/bwa.git
 cd bwa
-make
-cd ..
-
-# Install bedtools
-git clone https://github.com/arq5x/bedtools2.git
-cd bedtools2
 make
 cd ..
 
