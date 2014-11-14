@@ -22,7 +22,7 @@ manifest = open(file, 'r')
 for line in manifest:
     cols = line.strip().split('\t')
     if cols[0] == 'Homo sapiens':
-        name = '@' + cols[2] + ':' + cols[11]
+        name = '@' + cols[13] + ':' + cols[2] + ':' + cols[11]
         seq = cols[17]
         qual = '~' * len(seq)
         sys.stdout.write(name + '\n' + seq + '\n' + '+\n' + qual + '\n')
