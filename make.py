@@ -18,7 +18,8 @@ CHROM = [str(x) for x in range(1, 23)] + ['X', 'Y', 'M']
 localrules: all
 
 rule all:
-	input: DATA_DIR + 'snps_ceu_hg19_af.bed' #'allele_freqs_ceu.txt' 
+	input: DATA_DIR + 'snps_ceu_hg19_af.bed',
+               DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
 
 # Workflow
 rule setup:
@@ -161,3 +162,24 @@ rule add_freqs:
           freq.close()
           geno.close()
           out.close()
+
+################################################################################
+# Process probes
+################################################################################
+
+rule download_probes:
+	output: DATA_DIR + 'humanht-12_v4_0_r2_15002873_b.txt.zip'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'download_probes'
+	log: LOG_DIR
+	shell: 'wget -O {output} http://support.illumina.com/content/dam/illumina-support/documents/downloads/productfiles/humanht-12/humanht-12_v4_0_r2_15002873_b.txt.zip'
+
+rule unzip_probes:
+	input: DATA_DIR + 'humanht-12_v4_0_r2_15002873_b.txt.zip'
+	output: DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'unzip_probes'
+	log: LOG_DIR
+	shell: 'unzip -p {input} > {output}'
+
+
