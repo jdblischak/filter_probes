@@ -19,7 +19,7 @@ localrules: all
 
 rule all:
 	input: DATA_DIR + 'snps_ceu_hg19_af.bed',
-               DATA_DIR + 'ht12_probes.fq'
+               DATA_DIR + 'ht12_probes.bed'
 
 # Workflow
 rule setup:
@@ -213,3 +213,34 @@ rule convert_probes:
 
           manifest.close()
           fastq.close()
+
+# Map with bwa (use backtrack algorithm because reads are 50 bp)
+rule map_probes:
+	input: fastq = DATA_DIR + 'ht12_probes.fq',
+               genome = DATA_DIR + 'hg19.fa'
+	output: sai = DATA_DIR + 'ht12_probes.sai',
+                sam = DATA_DIR + 'ht12_probes.sam'
+	params: h_vmem = '12g', bigio = '0',
+                name = 'map_probes'
+	log: LOG_DIR
+	shell: '''
+        software/bwa/bwa aln {input.genome} {input.fastq} > {output.sai}
+        software/bwa/bwa samse {input.genome} {output.sai} {input.fastq} > {output.sam}
+        '''
+
+rule sam_to_bam:
+	input: DATA_DIR + 'ht12_probes.sam'              
+	output: DATA_DIR + 'ht12_probes.bam'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'sam_to_bam'
+	log: LOG_DIR
+	shell: 'samtools view -Sb {input} > {output}'
+
+# This step removes unmapped probes, which cannot be disabled
+rule bam_to_bed:
+	input: DATA_DIR + 'ht12_probes.bam'
+	output: DATA_DIR + 'ht12_probes.bed'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'bam_to_bed'
+	log: LOG_DIR
+	shell: 'bedtools bamtobed -cigar -i {input} > {output}'
