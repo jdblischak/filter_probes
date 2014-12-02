@@ -18,8 +18,7 @@ CHROM = [str(x) for x in range(1, 23)] + ['X', 'Y', 'M']
 localrules: all
 
 rule all:
-	input: DATA_DIR + 'snps_ceu_hg19_af.bed',
-               DATA_DIR + 'ht12_probes.bed'
+	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
 
 # Workflow
 rule setup:
@@ -244,3 +243,16 @@ rule bam_to_bed:
                 name = 'bam_to_bed'
 	log: LOG_DIR
 	shell: 'bedtools bamtobed -cigar -i {input} > {output}'
+
+################################################################################
+# Intersect probes and SNPs
+################################################################################
+
+rule intersect_bed:
+	input: probes = DATA_DIR + 'ht12_probes.bed',
+               snps  = DATA_DIR + 'snps_ceu_hg19_af.bed'
+	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'intersect_bed'
+	log: LOG_DIR
+	shell: 'bedtools intersect -loj -a {input.probes} -b {input.snps} > {output}'
