@@ -19,7 +19,7 @@ localrules: all
 
 rule all:
 	input: DATA_DIR + 'snps_ceu_hg19_af.bed',
-               DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
+               DATA_DIR + 'ht12_probes.fq'
 
 # Workflow
 rule setup:
@@ -182,4 +182,34 @@ rule unzip_probes:
 	log: LOG_DIR
 	shell: 'unzip -p {input} > {output}'
 
+'''
+Convert Illumina probes to fastq format.
 
+Example output:
+
+@NM_017583.3:TRIM44
+CCTGCCTGTCTGCCTGTGACCTGTGTACGTATTACAGGCTTTAGGACCAG
++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+'''
+
+rule convert_probes:
+	input: DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
+	output: DATA_DIR + 'ht12_probes.fq'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'convert_probes'
+	log: LOG_DIR
+	run:
+          manifest = open(input[0], 'r')
+          fastq = open(output[0], 'w')
+
+          for line in manifest:
+              cols = line.strip().split('\t')
+              if cols[0] == 'Homo sapiens':
+                  name = '@' + cols[13] + ':' + cols[2] + ':' + cols[11]
+                  seq = cols[17]
+                  qual = '~' * len(seq)
+                  fastq.write(name + '\n' + seq + '\n' + '+\n' + qual + '\n')
+
+          manifest.close()
+          fastq.close()
