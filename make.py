@@ -13,12 +13,13 @@ LOG_DIR = 'log/'
 
 # Settings
 CHROM = [str(x) for x in range(1, 23)] + ['X', 'Y', 'M']
+MAF = 0.05 # Minor Allele Frequency cutoff
 
 # Target rules
 localrules: all
 
 rule all:
-	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
+	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed'
 
 # Workflow
 rule setup:
@@ -256,3 +257,51 @@ rule intersect_bed:
                 name = 'intersect_bed'
 	log: LOG_DIR
 	shell: 'bedtools intersect -loj -a {input.probes} -b {input.snps} > {output}'
+
+# After using bedtools intersect with the -loj flag, each probe is
+# included in the new file at least once. If there is no SNP in the
+# probe, the columns are filled with periods for character columns and
+# -1 for numeric columns. However, if a probe has more than one SNP,
+# it will be listed on multiple lines. The ultimate goal is to remove
+# probes which contain SNPs at a certain minor allele frequency
+# (MAF). Thus for proper filtering, we need to only keep the SNP with
+# the highest MAF for each probe.
+rule reduce_probes:
+	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
+	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'filter_probes'
+	log: LOG_DIR
+	run:
+          probes = open(input[0], 'r')
+          good = open(output[0], 'w')
+
+          d = {}
+          for line in probes:
+              cols = line.strip().split('\t')
+              probe_id = cols[3]
+              if probe_id not in d.keys():
+                  d[cols[3]] = [line]
+              else:
+                  d[cols[3]].append(line)
+
+          for key in d:
+              if len(d[key]) == 1:
+                  good.write(d[key][0])
+              else: # Choose SNP with highest MAF for a given probe
+                  top_maf = 0
+                  result = ''
+                  for snp in d[key]:
+                      snp_af = snp.split('\t')[11]
+                      if snp_af == 'NA':
+                          snp_af = 0
+                      snp_af = float(snp_af)
+                      if snp_af > 0.5:
+                          snp_af = 1 - snp_af
+                      if snp_af >= top_maf:
+                          top_maf = snp_af
+                          result = snp
+                  good.write(result)
+
+          probes.close()
+          good.close()
