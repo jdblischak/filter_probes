@@ -9,9 +9,9 @@ get_args <- function(a) {
                       help = "Bed file with all mapped probes with their intersected SNPs.")
   parser$add_argument("manifest", nargs = 1,
                       help = "Illumina array manifest")
-  parser$add_argument("maf", nargs = 1,
+  parser$add_argument("maf", nargs = 1, type = "double",
                       help = "SNPs below this minor allele frequency cutoff will be ignored when filtering probes")
-  parser$add_argument("mapping", nargs = 1,
+  parser$add_argument("mapping", nargs = 1, type = "integer",
                       help = "Probes with mapping score lower than this cutoff will be removed.")
   return(parser$parse_args(a))
 }
@@ -94,7 +94,7 @@ plot_probes_v_maf <- function(all_probes) {
 ################################################################################
 
 count_probes <- function(all_probes, manifest, maf, mapping) {
-  
+
   command <- paste("grep 'Homo sapiens'", manifest, "| wc -l")
   total_num <- system(command, intern = TRUE)
   cat("Number of probes designed for human genome:", total_num, "\n")
@@ -103,6 +103,12 @@ count_probes <- function(all_probes, manifest, maf, mapping) {
       sum(all_probes$map_score > 0), "\n")
   cat("Number of probes mapped with quality score >=", mapping, "to hg19:",
       sum(all_probes$map_score >= mapping), "\n")
+  cat("Number of probes mapped without a SNP ( MAF >=", maf, "):",
+      sum(all_probes$snp_maf <= maf, na.rm = TRUE), "\n")
+  cat("Number of probes mapped with quality score >=", mapping,
+      "to hg19 and without a SNP ( MAF >=", maf, "):",
+      sum(all_probes$map_score >= mapping & all_probes$snp_maf <= maf,
+          na.rm = TRUE), "\n")
 }
 
 if (!interactive()) {
