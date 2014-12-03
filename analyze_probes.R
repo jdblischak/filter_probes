@@ -7,8 +7,8 @@ get_args <- function(a) {
   parser <- ArgumentParser(description  = "Analyze and filter probes.")
   parser$add_argument("probes", nargs = 1,
                       help = "Bed file with all mapped probes with their intersected SNPs.")
-  parser$add_argument("bam", nargs = 1,
-                      help = "Bam file with mapping results")
+  parser$add_argument("manifest", nargs = 1,
+                      help = "Illumina array manifest")
   parser$add_argument("maf", nargs = 1,
                       help = "SNPs below this minor allele frequency cutoff will be ignored when filtering probes")
   parser$add_argument("mapping", nargs = 1,
@@ -27,7 +27,7 @@ main <- function(args) {
   
   plot_probes_v_mapping(all_probes)
   plot_probes_v_maf(all_probes)
-  
+  count_probes(all_probes, args$manifest, args$maf, args$map)
   # plot numbers lost
   # filter
   # add ensembl genes names
@@ -86,12 +86,27 @@ plot_probes_v_maf <- function(all_probes) {
   dev.off()
 }
 
+################################################################################
+# Count number of probes after given filters
+################################################################################
+
+count_probes <- function(all_probes, manifest, maf, mapping) {
+  
+  command <- paste("grep 'Homo sapiens'", manifest, "| wc -l")
+  total_num <- system(command, intern = TRUE)
+  cat("Number of probes designed for human genome:", total_num, "\n")
+  cat("Number of probes mapped to hg19:", nrow(all_probes), "\n")
+  cat("Number of probes mapped uniquely to hg19:",
+      sum(all_probes$map_score > 0), "\n")
+  cat("Number of probes mapped with quality score >=", mapping, "to hg19:",
+      sum(all_probes$map_score >= mapping), "\n")
+}
 
 if (!interactive()) {
   cline <- commandArgs(trailingOnly = TRUE)
 } else {
   cline <- c("data/ht12_probes_snps_ceu_hg19_af_reduced.bed",
-             "data/ht12_probes.bam",
+             "data/HumanHT-12_V4_0_R2_15002873_B.txt",
              "0.05", "37")
 }
 
