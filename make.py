@@ -14,12 +14,13 @@ LOG_DIR = 'log/'
 # Settings
 CHROM = [str(x) for x in range(1, 23)] + ['X', 'Y', 'M']
 MAF = 0.05 # Minor Allele Frequency cutoff
+MAP_SCORE = 37 # Mapping quality score cutoff
 
 # Target rules
 localrules: all
 
 rule all:
-	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed'
+	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.bed'
 
 # Workflow
 rule setup:
@@ -270,7 +271,7 @@ rule reduce_probes:
 	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
 	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed'
 	params: h_vmem = '8g', bigio = '0',
-                name = 'filter_probes'
+                name = 'reduce_probes'
 	log: LOG_DIR
 	run:
           probes = open(input[0], 'r')
@@ -302,6 +303,33 @@ rule reduce_probes:
                           top_maf = snp_af
                           result = snp
                   good.write(result)
+
+          probes.close()
+          good.close()
+
+rule filter_probes:
+	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed'
+	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.bed'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'filter_probes'
+	log: LOG_DIR
+	run:
+          probes = open(input[0], 'r')
+          good = open(output[0], 'w')
+
+          d = {}
+          for line in probes:
+              cols = line.strip().split('\t')
+              af = cols[11]
+              if af == 'NA':
+                  continue
+              af = float(af)
+              if af > 0.5:
+                  af = 1 - af
+              map_score = float(cols[4])
+              if af <= MAF and map_score >= MAP_SCORE:
+                  good.write(line)
+#                  good.write('\t'.join(cols[:4]) + '\n')
 
           probes.close()
           good.close()
