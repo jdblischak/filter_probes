@@ -25,6 +25,10 @@ main <- function(args) {
   # Check that each probe is only present in the file once
   stopifnot(nrow(all_probes) == length(unique(all_probes$probe)))
   
+  # Calculate minor allele frequency
+  all_probes$snp_maf <- ifelse(all_probes$snp_af > 0.5,
+                               1 - all_probes$snp_af, all_probes$snp_af)
+  
   plot_probes_v_mapping(all_probes)
   plot_probes_v_maf(all_probes)
   count_probes(all_probes, args$manifest, args$maf, args$map)
@@ -64,8 +68,6 @@ plot_probes_v_mapping <- function(all_probes) {
 ################################################################################
 
 plot_probes_v_maf <- function(all_probes) {
-  af <- all_probes$snp_af
-  af <- ifelse(af > 0.5, 1 - af, af)
   
   # sum(is.na(af)) # 14 probes have SNPs with no allele frequency estimate.
   # These are not counted.
@@ -75,7 +77,8 @@ plot_probes_v_maf <- function(all_probes) {
   maf_cutoff <- seq(0, 0.5, by = 0.01)
   num_probes_wo_snp <- numeric(length = length(maf_cutoff))
   for (i in seq_along(maf_cutoff)) {
-    num_probes_wo_snp[i] <- sum(af <= maf_cutoff[i], na.rm = TRUE)
+    num_probes_wo_snp[i] <- sum(all_probes$snp_maf <= maf_cutoff[i],
+                                na.rm = TRUE)
   }
   png("probes_v_maf.png")
   plot(maf_cutoff, num_probes_wo_snp,
