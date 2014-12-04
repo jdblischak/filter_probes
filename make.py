@@ -207,7 +207,7 @@ rule convert_probes:
           for line in manifest:
               cols = line.strip().split('\t')
               if cols[0] == 'Homo sapiens':
-                  name = '@' + cols[13] + ':' + cols[2] + ':' + cols[11]
+                  name = '@' + cols[13] + ':' + cols[2] + ':' + cols[8] + ':' + cols[11]
                   seq = cols[17]
                   qual = '~' * len(seq)
                   fastq.write(name + '\n' + seq + '\n' + '+\n' + qual + '\n')
