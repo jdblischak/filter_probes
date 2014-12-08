@@ -40,7 +40,10 @@ main <- function(args) {
   formatted_probes <- format_probes(filtered_probes, args$problem)
   count_probes(all_probes, args$manifest, args$maf, args$mapping,
                formatted_probes)
-  write.table(formatted_probes, args$output,
+  sorted_probes <- formatted_probes[order(formatted_probes$chr,
+                                          formatted_probes$start,
+                                          formatted_probes$end), ]
+  write.table(sorted_probes, args$output,
               sep = "\t", quote = FALSE, row.names = FALSE)
 }
 
