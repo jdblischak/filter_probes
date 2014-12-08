@@ -14,7 +14,7 @@ get_args <- function(a) {
                       help = "SNPs below this minor allele frequency cutoff will be ignored when filtering probes")
   parser$add_argument("mapping", nargs = 1, type = "integer",
                       help = "Probes with mapping score lower than this cutoff will be removed")
-  parser$add_argument("output", nargs = 1, type = "integer",
+  parser$add_argument("output", nargs = 1, type = "character",
                       help = "File to write probe list")
   parser$add_argument("-p", "--problem", nargs = 1, type = "character", metavar = "filename",
                       help = "Write probes with ambiguous association with Ensembl ID to this file")
