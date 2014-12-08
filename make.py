@@ -215,18 +215,31 @@ rule convert_probes:
           manifest.close()
           fastq.close()
 
+rule install_bwa:
+	output: SRC_DIR + 'bwa/bwa',
+	params: h_vmem = '8g', bigio = '0',
+            name = 'install_bwa'
+	log: LOG_DIR
+	shell: '''
+        cd {SRC_DIR}
+        git clone https://github.com/lh3/bwa.git
+        cd bwa
+        make
+        '''
+
 # Map with bwa (use backtrack algorithm because reads are 50 bp)
 rule map_probes:
 	input: fastq = DATA_DIR + 'ht12_probes.fq',
-               genome = DATA_DIR + 'hg19.fa'
+               genome = DATA_DIR + 'hg19.fa',
+               bwa = SRC_DIR + 'bwa/bwa'
 	output: sai = DATA_DIR + 'ht12_probes.sai',
                 sam = DATA_DIR + 'ht12_probes.sam'
 	params: h_vmem = '12g', bigio = '0',
                 name = 'map_probes'
 	log: LOG_DIR
 	shell: '''
-        software/bwa/bwa aln {input.genome} {input.fastq} > {output.sai}
-        software/bwa/bwa samse {input.genome} {output.sai} {input.fastq} > {output.sam}
+        {input.bwa} aln {input.genome} {input.fastq} > {output.sai}
+        {input.bwa} samse {input.genome} {output.sai} {input.fastq} > {output.sam}
         '''
 
 rule sam_to_bam:
