@@ -36,7 +36,7 @@ main <- function(args) {
   filtered_probes <- filter_probes(all_probes, args$maf, args$mapping)
   formatted_probes <- format_probes(filtered_probes)
   write.table(formatted_probes, "",
-              sep = "\t", quote = FALSE, row.names = FALSE))
+              sep = "\t", quote = FALSE, row.names = FALSE)
 }
 
 
