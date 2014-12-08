@@ -227,11 +227,31 @@ rule install_bwa:
         make
         '''
 
+rule download_genome:
+	output: DATA_DIR + 'hg19.fa',
+	params: h_vmem = '8g', bigio = '0',
+            name = 'install_bwa'
+	log: LOG_DIR
+	shell: '''
+        rsync -avzuP globus.opensciencedatacloud.org::public/illumina/igenomes/Homo_sapiens/UCSC/hg19/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa {DATA_DIR}
+        mv {DATA_DIR}genome.fa {output}
+        '''
+
+rule index_genome:
+	input: bwa = SRC_DIR + 'bwa/bwa',
+               genome = DATA_DIR + 'hg19.fa'
+	output: DATA_DIR + 'hg19.fa.bwt'
+	params: h_vmem = '8g', bigio = '0',
+            name = 'install_bwa'
+	log: LOG_DIR
+	shell: '{input.bwa} index {input.genome}'
+
 # Map with bwa (use backtrack algorithm because reads are 50 bp)
 rule map_probes:
 	input: fastq = DATA_DIR + 'ht12_probes.fq',
                genome = DATA_DIR + 'hg19.fa',
-               bwa = SRC_DIR + 'bwa/bwa'
+               bwa = SRC_DIR + 'bwa/bwa',
+               index = DATA_DIR + 'hg19.fa.bwt'
 	output: sai = DATA_DIR + 'ht12_probes.sai',
                 sam = DATA_DIR + 'ht12_probes.sam'
 	params: h_vmem = '12g', bigio = '0',
