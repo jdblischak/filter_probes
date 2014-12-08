@@ -7,13 +7,15 @@ get_args <- function(a) {
   ## for explanation of command line options
   parser <- ArgumentParser(description  = "Analyze and filter probes.")
   parser$add_argument("probes", nargs = 1,
-                      help = "Bed file with all mapped probes with their intersected SNPs.")
+                      help = "Bed file with all mapped probes with their intersected SNPs")
   parser$add_argument("manifest", nargs = 1,
                       help = "Illumina array manifest")
   parser$add_argument("maf", nargs = 1, type = "double",
                       help = "SNPs below this minor allele frequency cutoff will be ignored when filtering probes")
   parser$add_argument("mapping", nargs = 1, type = "integer",
-                      help = "Probes with mapping score lower than this cutoff will be removed.")
+                      help = "Probes with mapping score lower than this cutoff will be removed")
+  parser$add_argument("output", nargs = 1, type = "integer",
+                      help = "File to write probe list")
   parser$add_argument("-p", "--problem", nargs = 1, type = "character", metavar = "filename",
                       help = "Write probes with ambiguous association with Ensembl ID to this file")
   return(parser$parse_args(a))
@@ -34,10 +36,11 @@ main <- function(args) {
   
   plot_probes_v_mapping(all_probes)
   plot_probes_v_maf(all_probes)
-  count_probes(all_probes, args$manifest, args$maf, args$mapping)
   filtered_probes <- filter_probes(all_probes, args$maf, args$mapping)
   formatted_probes <- format_probes(filtered_probes)
-  write.table(formatted_probes, "",
+  count_probes(all_probes, args$manifest, args$maf, args$mapping,
+               formatted_probes)
+  write.table(formatted_probes, args$output,
               sep = "\t", quote = FALSE, row.names = FALSE)
 }
 
@@ -96,7 +99,7 @@ plot_probes_v_maf <- function(all_probes) {
 # Count number of probes after given filters
 ################################################################################
 
-count_probes <- function(all_probes, manifest, maf, mapping) {
+count_probes <- function(all_probes, manifest, maf, mapping, ens_probes) {
 
   command <- paste("grep 'Homo sapiens'", manifest, "| wc -l")
   total_num <- system(command, intern = TRUE)
@@ -112,6 +115,8 @@ count_probes <- function(all_probes, manifest, maf, mapping) {
       "to hg19 and without a SNP ( MAF >=", maf, "):",
       sum(all_probes$map_score >= mapping & all_probes$snp_maf <= maf,
           na.rm = TRUE), "\n")
+  cat("Number of probes associated with a unique Ensembl gene ID",
+      nrow(ens_probes), "\n")
 }
 
 ################################################################################
