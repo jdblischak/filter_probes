@@ -37,7 +37,7 @@ main <- function(args) {
   plot_probes_v_mapping(all_probes)
   plot_probes_v_maf(all_probes)
   filtered_probes <- filter_probes(all_probes, args$maf, args$mapping)
-  formatted_probes <- format_probes(filtered_probes)
+  formatted_probes <- format_probes(filtered_probes, args$problem)
   count_probes(all_probes, args$manifest, args$maf, args$mapping,
                formatted_probes)
   write.table(formatted_probes, args$output,
