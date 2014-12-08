@@ -14,6 +14,8 @@ get_args <- function(a) {
                       help = "SNPs below this minor allele frequency cutoff will be ignored when filtering probes")
   parser$add_argument("mapping", nargs = 1, type = "integer",
                       help = "Probes with mapping score lower than this cutoff will be removed.")
+  parser$add_argument("-p", "--problem", nargs = 1, type = "character", metavar = "filename",
+                      help = "Write probes with ambiguous association with Ensembl ID to this file")
   return(parser$parse_args(a))
 }
 
@@ -128,7 +130,9 @@ filter_probes <- function(all_probes, maf, mapping) {
 # Format probes
 ################################################################################
 
-format_probes <- function(probes) {
+format_probes <- function(probes, problem_file = NULL) {
+  # problem_file - filename to save problem probes that are associated with more than
+  # one Ensembl gene ID
   ensembl <- useMart(host = "feb2014.archive.ensembl.org",
                      biomart = "ENSEMBL_MART_ENSEMBL",
                      dataset = "hsapiens_gene_ensembl")
@@ -185,25 +189,27 @@ format_probes <- function(probes) {
     }
   }
   
-  df_problem <- vector()
-  for (i in problem) {
-    probe_match <- which(ens_gene_names$illumina_humanht_12_v4 == probeID[i])
-    if (entrez[i] != "") {
-      entrez_match <- which(ens_gene_names$entrezgene == entrez[i])
-    } else {
-      entrez_match <- 1:nrow(probes)
+  if (!is.null(problem_file)) {
+    df_problem <- vector()
+    for (i in problem) {
+      probe_match <- which(ens_gene_names$illumina_humanht_12_v4 == probeID[i])
+      if (entrez[i] != "") {
+        entrez_match <- which(ens_gene_names$entrezgene == entrez[i])
+      } else {
+        entrez_match <- 1:nrow(probes)
+      }
+      if (!is.na(hugo[i])) {
+        hugo_match <- which(ens_gene_names$hgnc_symbol == hugo[i])
+      } else {
+        hugo_match <- 1:nrow(probes)
+      }
+      row_match <- intersect(probe_match, intersect(entrez_match, hugo_match))
+      result <- ens_gene_names[row_match, ]
+      df_problem <- rbind(df_problem, result)
     }
-    if (!is.na(hugo[i])) {
-      hugo_match <- which(ens_gene_names$hgnc_symbol == hugo[i])
-    } else {
-      hugo_match <- 1:nrow(probes)
-    }
-    row_match <- intersect(probe_match, intersect(entrez_match, hugo_match))
-    result <- ens_gene_names[row_match, ]
-    df_problem <- rbind(df_problem, result)
+    write.table(df_problem, problem_file, sep = "\t", quote = FALSE,
+                row.names = FALSE)
   }
-  write.table(df_problem, "problem_probes.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-  
   final <- data.frame(chr = probes$chr,
                       start = probes$start,
                       end = probes$end,
