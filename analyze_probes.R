@@ -35,10 +35,8 @@ main <- function(args) {
   count_probes(all_probes, args$manifest, args$maf, args$mapping)
   filtered_probes <- filter_probes(all_probes, args$maf, args$mapping)
   formatted_probes <- format_probes(filtered_probes)
-  # plot numbers lost
-  # filter
-  # add ensembl genes names
-  # output
+  write.table(formatted_probes, "",
+              sep = "\t", quote = FALSE, row.names = FALSE))
 }
 
 
@@ -131,7 +129,6 @@ filter_probes <- function(all_probes, maf, mapping) {
 ################################################################################
 
 format_probes <- function(probes) {
-  saveRDS(probes, "probes.rds")
   ensembl <- useMart(host = "feb2014.archive.ensembl.org",
                      biomart = "ENSEMBL_MART_ENSEMBL",
                      dataset = "hsapiens_gene_ensembl")
@@ -142,42 +139,6 @@ format_probes <- function(probes) {
   hugo <- sapply(ids, function(x) x[4])
   stopifnot(length(probeID) + length(refseq) + length(entrez) ==
             length(hugo) * 3)
-  ensg_conv <- list()
-    
-  ensg_conv[["probeID"]] <- getBM(attributes = c("ensembl_gene_id",
-                                                 "illumina_humanht_12_v4"),
-                                  filters = "illumina_humanht_12_v4",
-                                  values = probeID,
-                                  mart = ensembl)
-  ensg_conv[["entrez"]] <- getBM(attributes = c("ensembl_gene_id",
-                                                 "entrezgene"),
-                                  filters = "entrezgene",
-                                  values = entrez,
-                                  mart = ensembl)
-  ensg_conv[["hugo"]] <- getBM(attributes = c("ensembl_gene_id",
-                                              "hgnc_symbol"),
-                                 filters = "hgnc_symbol",
-                                 values = hugo,
-                                 mart = ensembl)
-  library("plyr")
-  convert_df_to_vec <- function(df) {
-    # Ensembl gene IDs are the names of the elements of the vector
-    vec <- df[, 2]
-    names(vec) <- df[, 1]
-    return(vec)
-  }
-  ensg_conv <- llply(ensg_conv, convert_df_to_vec)
-  # Have to do this inefficiently because no one of the IDs gives good
-  # conversions to Ensembl on its own.
-  ensg <- vector(length = nrow(probes))
-  for (i in seq_along(probeID)) {
-    result <- names(ensg_conv[["entrez"]])[ensg_conv[["entrez"]] == entrez[i]]
-    ensg[i] <- length(result)
-  }
-  
-  
-  
-  
   
   ens_gene_names <- getBM(attributes = c("ensembl_gene_id",
                                          "illumina_humanht_12_v4",
@@ -187,29 +148,13 @@ format_probes <- function(probes) {
                                          "entrezgene"),
                           filters = c("illumina_humanht_12_v4",
                                       "chromosome_name", "source"),
-                          values = list(probeID, c(1:22, "X", "Y"),
-                                        c("ensembl", "ensembl_havana")),
+                          values = list(probeID, c(1:22, "X", "Y", "M"),
+                                        c("ensembl", "ensembl_havana", "havana")),
                           mart = ensembl)
   
   ensg <- vector(length = nrow(probes))
-  len <- vector(length = nrow(probes))
-  for (i in seq_along(probeID)) {
-    # Subset by probeID
-    result <- ens_gene_names[ens_gene_names$illumina_humanht_12_v4 == probeID[i], ]
-    if (nrow(result) == 0) {
-      ensg[i] <- NA
-    } else if (nrow(result) == 1) {
-      ensg[i] <- result$ensembl_gene_id
-    } else {
-      browser()
-      # Subset by HUGO Symbol
-      result <- result[result$hgnc_symbol == hugo[i], ]
-      
-      ensg[i] <- result$ensembl_gene_id[1]
-    }
-    len[i] <- nrow(result)
-  }
-  
+  biotype <- vector(length = nrow(probes))
+
   problem <- vector()
   for (i in seq_along(probeID)) {
     probe_match <- which(ens_gene_names$illumina_humanht_12_v4 == probeID[i])
@@ -228,10 +173,13 @@ format_probes <- function(probes) {
     
     if (nrow(result) == 0) {
       ensg[i] <- NA
+      biotype[i] <- NA
     } else if (nrow(result) == 1) {
       ensg[i] <- result$ensembl_gene_id
+      biotype[i] <- result$gene_biotype
     } else if (length(unique(result$ensembl_gene_id)) == 1) {
       ensg[i] <- result$ensembl_gene_id[1]
+      biotype[i] <- result$gene_biotype[1]
     } else {
       problem <- c(problem, i)
     }
@@ -256,77 +204,18 @@ format_probes <- function(probes) {
   }
   write.table(df_problem, "problem_probes.txt", sep = "\t", quote = FALSE, row.names = FALSE)
   
-#     
-#     result <- ens_gene_names[ens_gene_names$illumina_humanht_12_v4 == probeID[i] &
-#                              ens_gene_names$entrezgene == entrez[i] &
-#                              ens_gene_names$hgnc_symbol == hugo[i], ]
-    len[i] <- length(row_match)
-    if (len[i] > 1) {
-      browser()
-    }
-  }
-
-  ens_gene_names <- getBM(attributes = c("ensembl_gene_id",
-                                         "illumina_humanht_12_v4"),
-                          filters = c("illumina_humanht_12_v4",
-                                      "chromosome_name"),
-                          values = list(probeID, c(1:22, "X", "Y")),
-                          mart = ensembl)
-  
-  ens_gene_names <- getBM(attributes = c("ensembl_gene_id",
-                                         "illumina_humanht_12_v4"),
-                          filters = c("illumina_humanht_12_v4",
-                                      "chromosome_name"),
-                          values = list(probeID, c(1:22, "X", "Y")),
-                          mart = ensembl)
-  
-  
-  # super filter
-  ens_gene_names <- getBM(attributes = c("ensembl_gene_id",
-                                         "illumina_humanht_12_v4",
-                                         "source", "chromosome_name",
-                                         "hgnc_symbol",
-                                         "gene_biotype",
-                                         "entrezgene"),
-                          filters = c("illumina_humanht_12_v4",
-                                      "chromosome_name",
-                                      "entrezgene", "hgnc_symbol"),
-                          values = list(probeID, c(1:22, "X", "Y"), entrez,
-                                        hugo),
-                          mart = ensembl)
-  
-  # entrez
-  ens_gene_names <- getBM(attributes = c("ensembl_gene_id",
-                                         "entrezgene"),
-                          filters = c("entrezgene",
-                                      "chromosome_name",
-                                      "source"),
-                          values = list(entrez, c(1:22, "X", "Y"),
-                                        c("ensembl_havana", "ensembl")),
-                          mart = ensembl)
-  
-#   
-#   ens_gene_names <- getBM(attributes = c("ensembl_gene_id",
-#                                          "illumina_humanht_12_v4",
-#                                          "refseq_mrna",
-#                                          "source", "chromosome_name",
-#                                          "hgnc_symbol"),
-#                       filters = c("illumina_humanht_12_v4",
-#                                   "hgnc_symbol"),
-#                       values = list(probeID, hugo),
-#                       mart = ensembl)
-  ens_gene_names_clean <- ens_gene_names[ens_gene_names$chromosome_name %in%
-                                           c(1:22, "X", "Y"), ]
   final <- data.frame(chr = probes$chr,
                       start = probes$start,
                       end = probes$end,
                       probeID,
                       score = probes$map_score,
                       strand = probes$strand,
-                      targetRefSeq = refseq,
-                      targetHGNC = hugo)
-  final <- merge(final, ens_gene_names_clean, by.x = "probeID",
-                 by.y = "illumina_humanht_12_v4", all.x = TRUE)
+                      targetENSG = ensg,
+                      targetHGNC = hugo,
+                      targetEntrez = entrez,
+                      targetBiotype = biotype)
+  final <- final[!is.na(final$targetENSG), ]
+  return(final)
 }
 
 if (!interactive()) {
