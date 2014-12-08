@@ -310,7 +310,7 @@ rule reduce_probes:
 rule filter_probes:
 	input: probes = DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed',
                manifest = DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
-	output: probes = DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.bed',
+	output: probes = DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt',
                 problem = DATA_DIR + 'problem_probes.txt'
 	params: h_vmem = '8g', bigio = '0',
                 name = 'filter_probes'
