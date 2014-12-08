@@ -21,7 +21,7 @@ SNP with a minor allele frequency of at least 5% (36,893
 probes). Third, we converted the Illumina probe IDs to Ensembl gene
 IDs using the R/Bioconductor package biomaRt ([Durinck et al.,
 2009][Durinck2009]) and kept only those probes which are associated
-with exactly one Ensembl gene ID (23,890 probes). The full pipeline
+with exactly one Ensembl gene ID (Ensembl 75 - Feb 2014; 23,890 probes). The full pipeline
 was implemented using the Python package Snakemake ([Koster & Rahmann,
 2012][Koster2012]).
 
