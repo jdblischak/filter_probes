@@ -154,7 +154,8 @@ format_probes <- function(probes, problem_file = NULL) {
                                          "source", "chromosome_name",
                                          "hgnc_symbol",
                                          "gene_biotype",
-                                         "entrezgene"),
+                                         "entrezgene",
+                                         "external_gene_id"),
                           filters = c("illumina_humanht_12_v4",
                                       "chromosome_name", "source"),
                           values = list(probeID, c(1:22, "X", "Y", "M"),
@@ -163,6 +164,7 @@ format_probes <- function(probes, problem_file = NULL) {
   
   ensg <- vector(length = nrow(probes))
   biotype <- vector(length = nrow(probes))
+  ens_name <- vector(length = nrow(probes))
 
   problem <- vector()
   for (i in seq_along(probeID)) {
@@ -183,12 +185,15 @@ format_probes <- function(probes, problem_file = NULL) {
     if (nrow(result) == 0) {
       ensg[i] <- NA
       biotype[i] <- NA
+      ens_name[i] <- NA
     } else if (nrow(result) == 1) {
       ensg[i] <- result$ensembl_gene_id
       biotype[i] <- result$gene_biotype
+      ens_name[i] <- result$external_gene_id
     } else if (length(unique(result$ensembl_gene_id)) == 1) {
       ensg[i] <- result$ensembl_gene_id[1]
       biotype[i] <- result$gene_biotype[1]
+      ens_name[i] <- result$external_gene_id[1]
     } else {
       problem <- c(problem, i)
     }
@@ -224,7 +229,8 @@ format_probes <- function(probes, problem_file = NULL) {
                       targetENSG = ensg,
                       targetHGNC = hugo,
                       targetEntrez = entrez,
-                      targetBiotype = biotype)
+                      targetBiotype = biotype,
+                      targetENSName = ens_name)
   final <- final[!is.na(final$targetENSG), ]
   return(final)
 }
