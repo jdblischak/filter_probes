@@ -20,7 +20,7 @@ MAP_SCORE = 37 # Mapping quality score cutoff
 localrules: all
 
 rule all:
-	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.bed'
+	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt'
 
 # Workflow
 rule setup:
