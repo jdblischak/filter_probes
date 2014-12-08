@@ -234,7 +234,10 @@ format_probes <- function(probes, problem_file = NULL) {
                       targetEntrez = entrez,
                       targetBiotype = biotype,
                       targetENSName = ens_name)
+  # Remove probes which are not associated with an Ensembl gene ID
   final <- final[!is.na(final$targetENSG), ]
+  # Remove probes with ambiguous association with more than one Ensembl gene ID
+  final <- final[final$targetENSG != FALSE, ]
   return(final)
 }
 
