@@ -30,13 +30,13 @@ was implemented using the Python package Snakemake ([Koster & Rahmann,
 
 ## Results
 
-Number of probes designed for human genome: 47231 
-Number of probes mapped to hg19: 43143 
-Number of probes mapped uniquely to hg19: 39801 
-Number of probes mapped with quality score >= 37 to hg19: 37963 
-Number of probes mapped without a SNP ( MAF >= 0.05 ): 42027 
-Number of probes mapped with quality score >= 37 to hg19 and without a SNP ( MAF >= 0.05 ): 36893 
-Number of probes associated with a unique Ensembl gene ID: 23890
+* Number of probes designed for human genome: 47231 
+* Number of probes mapped to hg19: 43143 
+* Number of probes mapped uniquely to hg19: 39801 
+* Number of probes mapped with quality score >= 37 to hg19: 37963 
+* Number of probes mapped without a SNP ( MAF >= 0.05 ): 42027 
+* Number of probes mapped with quality score >= 37 to hg19 and without a SNP ( MAF >= 0.05 ): 36893 
+* Number of probes associated with a unique Ensembl gene ID: 23890
 
 ## Software
 
