@@ -35,35 +35,35 @@ rule download_genos:
     '''
 
 rule geno_to_bed:
-    input: DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
+	input: DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
 	output: DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.bed'
 	params: h_vmem = '8g', bigio = '0',
             name = lambda wildcards: 'geno_to_bed.' + wildcards.CHR
 	log: LOG_DIR
 	run:
-    import gzip
+          import gzip
   
-    # Open connection and skip header line
-    geno = gzip.open(input[0], 'r')
-    geno.readline()
+          # Open connection and skip header line
+          geno = gzip.open(input[0], 'r')
+          geno.readline()
 
-    # Open connection to output file
-    bed = open(output[0], 'w')
+          # Open connection to output file
+          bed = open(output[0], 'w')
 
-    # Read in genotypes and write out in bed format
-    for g in geno:
-        g = str(g, encoding='utf8')
-        g_cols = g.strip().split(' ')
-        chrom = g_cols[2]
-        start = str(int(g_cols[3]) - 1)
-        end = g_cols[3]
-        name = g_cols[0]
-        score = '0'
-        strand = '+'
-        bed.write(chrom + '\t' + start + '\t' + end + '\t' + name + '\t' + score + '\t' + strand + '\n')
+          # Read in genotypes and write out in bed format
+          for g in geno:
+              g = str(g, encoding='utf8')
+              g_cols = g.strip().split(' ')
+              chrom = g_cols[2]
+              start = str(int(g_cols[3]) - 1)
+              end = g_cols[3]
+              name = g_cols[0]
+              score = '0'
+              strand = '+'
+              bed.write(chrom + '\t' + start + '\t' + end + '\t' + name + '\t' + score + '\t' + strand + '\n')
 
-    geno.close()
-    bed.close()
+          geno.close()
+          bed.close()
     
 rule combine_genos:
 	input: expand(DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.bed', CHR = CHROM)
@@ -103,32 +103,32 @@ rule download_freqs:
 	shell: 'wget -O {output} http://hapmap.ncbi.nlm.nih.gov/downloads/frequencies/2010-08_phaseII+III/allele_freqs_chr{wildcards.CHR}_CEU_r28_nr.b36_fwd.txt.gz'
 
 rule extract_freqs:
-    input: DATA_DIR + 'allele_freqs_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
+	input: DATA_DIR + 'allele_freqs_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
 	output: DATA_DIR + 'allele_freqs_ceu_{CHR}.txt'
 	params: h_vmem = '8g', bigio = '0',
             name = lambda wildcards: 'extract_freqs' + wildcards.CHR
 	log: LOG_DIR
 	run:
-    import gzip
+          import gzip
 
-    # Open connection and skip header line
-    freq = gzip.open(input[0], 'r')
-    freq.readline()
+          # Open connection and skip header line
+          freq = gzip.open(input[0], 'r')
+          freq.readline()
 
-    # Open connection to output file
-    out = open(output[0], 'w')
+          # Open connection to output file
+          out = open(output[0], 'w')
     
-    # Extract allele frequencies
-    for f in freq:
-        f = str(f, encoding='utf8')
-        f_cols = f.strip().split(' ')
-        out.write(f_cols[0] + '\t' + f_cols[11] + '\n')
+          # Extract allele frequencies
+          for f in freq:
+              f = str(f, encoding='utf8')
+              f_cols = f.strip().split(' ')
+              out.write(f_cols[0] + '\t' + f_cols[11] + '\n')
 
-    freq.close()
-    out.close()
+          freq.close()
+          out.close()
 
 rule combine_freqs:
-    input: expand(DATA_DIR + 'allele_freqs_ceu_{CHR}.txt', CHR = CHROM)
+	input: expand(DATA_DIR + 'allele_freqs_ceu_{CHR}.txt', CHR = CHROM)
 	output: DATA_DIR + 'allele_freqs_ceu.txt'
 	params: h_vmem = '8g', bigio = '0',
             name = 'combine_freqs'
