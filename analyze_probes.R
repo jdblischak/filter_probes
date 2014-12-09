@@ -246,7 +246,7 @@ if (!interactive()) {
 } else {
   cline <- c("data/ht12_probes_snps_ceu_hg19_af_reduced.bed",
              "data/HumanHT-12_V4_0_R2_15002873_B.txt",
-             "0.05", "37")
+             "0.05", "37", "data/answer.txt")
 }
 
 args <- get_args(cline)
