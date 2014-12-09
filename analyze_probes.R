@@ -47,6 +47,24 @@ main <- function(args) {
               sep = "\t", quote = FALSE, row.names = FALSE)
 }
 
+################################################################################
+# Test SNP-probe combinations
+################################################################################
+
+test_snp_probe <- function(all_probes) {
+  ids  <- strsplit(all_probes$probe, ":")
+  probeID <- sapply(ids, function(x) x[1])
+  
+  test_probe <- c("ILMN_2047240", "ILMN_2310685", "ILMN_2132898", "ILMN_2404154")
+  test_snp <- c("rs6151429", "rs3794713", "rs1329151", "rs1303")
+  for (i in seq_along(test_probe)) {
+    if(all_probes[probeID == test_probe[i], "snp"] != test_snp[i]) {
+      warning(sprintf("Check versions of databases used.
+                      Expect SNP %s to fall in probe %s",
+                      test_snp[i], test_probe[i]))
+    }
+  }  
+}
 
 ################################################################################
 # Plot dependence on mapping quality
