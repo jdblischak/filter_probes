@@ -34,6 +34,7 @@ main <- function(args) {
   all_probes$snp_maf <- ifelse(all_probes$snp_af > 0.5,
                                1 - all_probes$snp_af, all_probes$snp_af)
   
+  test_snp_probe(all_probes)
   plot_probes_v_mapping(all_probes)
   plot_probes_v_maf(all_probes)
   filtered_probes <- filter_probes(all_probes, args$maf, args$mapping)
