@@ -230,7 +230,7 @@ rule install_bwa:
 rule download_genome:
 	output: DATA_DIR + 'hg19.fa',
 	params: h_vmem = '8g', bigio = '0',
-            name = 'install_bwa'
+            name = 'download_genome'
 	log: LOG_DIR
 	shell: '''
         rsync -avzuP globus.opensciencedatacloud.org::public/illumina/igenomes/Homo_sapiens/UCSC/hg19/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa {DATA_DIR}
@@ -242,7 +242,7 @@ rule index_genome:
                genome = DATA_DIR + 'hg19.fa'
 	output: DATA_DIR + 'hg19.fa.bwt'
 	params: h_vmem = '8g', bigio = '0',
-            name = 'install_bwa'
+            name = 'index_genome'
 	log: LOG_DIR
 	shell: '{input.bwa} index {input.genome}'
 
