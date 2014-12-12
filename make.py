@@ -206,7 +206,7 @@ rule convert_probes:
 
           for line in manifest:
               cols = line.strip().split('\t')
-              if cols[0] == 'Homo sapiens':
+              if cols[0] == 'Homo sapiens' and ':' not in cols[20]:
                   name = '@' + cols[13] + ':' + cols[2] + ':' + cols[8] + ':' + cols[11]
                   seq = cols[17]
                   qual = '~' * len(seq)
