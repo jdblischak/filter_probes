@@ -11,7 +11,7 @@ For our analysis, we used a subset of the 47,321 probes designed to
 target genome of the Illumina HT-12v4 bead array that we determined
 were not affected by common SNPs in the HapMap CEU population. First,
 we mapped the probes to human genome hg19 and kept only those with a
-quality score of 37 (40,198 probes; note that we also explicityly
+quality score of 37 (40,198 probes; note that we also explicitly
 pre-filtered the 5,587 probes which were annotated as spanning
 exon-exon junctions to avoid mapping errors). Second, we downloaded
 the HapMap CEU SNPs
