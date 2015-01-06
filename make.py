@@ -5,11 +5,16 @@ To submit:
 nohup snakemake -kps make.py -j 96 --ri -c "qsub -l h_vmem={params.h_vmem} -l bigio={params.bigio} -N {params.name} -V -j y -cwd -o {log}" &
 '''
 
+import os
 
 # Paths
 DATA_DIR = 'data/'
 SRC_DIR = 'software/'
 LOG_DIR = 'log/'
+
+for d in [DATA_DIR, SRC_DIR, LOG_DIR]:
+    if not os.path.isdir(d):
+        os.mkdir(d)
 
 # Settings
 CHROM = [str(x) for x in range(1, 23)] + ['X', 'Y', 'M']
@@ -23,16 +28,12 @@ rule all:
 	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt'
 
 # Workflow
-rule setup:
-	output: DATA_DIR, SRC_DIR, LOG_DIR
-	shell: 'mkdir -p {output}'
-
 rule download_genos:
 	output: DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
-	shell: '''
-    wget http://hapmap.ncbi.nlm.nih.gov/downloads/genotypes/2010-08_phaseII+III/forward/{output}
-    mv {output} {DATA_DIR}
-    '''
+	params: h_vmem = '8g', bigio = '0',
+            name = lambda wildcards: 'download_genos' + wildcards.CHR
+	log: LOG_DIR
+	shell: 'wget -O {output} http://hapmap.ncbi.nlm.nih.gov/downloads/genotypes/2010-08_phaseII+III/forward/genotypes_chr{wildcards.CHR}_CEU_r28_nr.b36_fwd.txt.gz'
 
 rule geno_to_bed:
 	input: DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
@@ -80,10 +81,10 @@ rule download_lift_over:
             name = 'download_lift_over'
 	log: LOG_DIR
 	shell: '''
-    wget -O {output.exec} http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/liftOver
-    chmod +x {output.exec}
-    wget -O {output.chain} http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz
-    '''
+        wget -O {output.exec} http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/liftOver
+        chmod +x {output.exec}
+        wget -O {output.chain} http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz
+        '''
 
 rule lift_over_genos:
 	input: genos = DATA_DIR + 'snps_ceu_hg18.bed',
