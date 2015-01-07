@@ -79,6 +79,8 @@ This analysis pipeline requires the following to be installed:
 * Snakemake
 * Samtools
 * bedtools
+* R package argparse
+* R/Bioconductor package biomaRt
 
 The pipeline installs the following:
 
