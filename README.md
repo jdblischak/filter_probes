@@ -5,6 +5,38 @@ affect the hybridation kinetics of gene expression microarrays. This
 is especially troublesome for studies that investigate differences in
 gene expression between individuals.
 
+## Usage
+
+Clone the repository:
+
+```
+git clone git@github.com:jdblischak/filter_probes.git
+cd filter_probes
+```
+
+To run sequentially, run:
+
+```
+snakemake -s make.py
+```
+
+To run in parallel, use the `-c` and `-j` options to submit each job
+to your grid computing system. This will vary based on your
+setup. Here is an example using grid engine on my work cluster:
+
+```
+snakemake -s make.py -c -j 30 -c "qsub -l h_vmem={params.h_vmem} -N {params.name} -V -j y -cwd -o {log}"
+```
+
+This will submit up to 30 jobs at once, each requesting the virtual
+memory and name specified for each job in the Snakefile. Since this
+can take hours to complete, I recommend submitting the job in the
+background immune to hangups, e.g.:
+
+```
+nohup snakemake -s make.py -c -j 30 -c "qsub -l h_vmem={params.h_vmem} -N {params.name} -V -j y -cwd -o {log}" &
+```
+
 ## Technical description
 
 For our analysis, we used a subset of the 47,321 probes designed to
