@@ -6,6 +6,7 @@ nohup snakemake -kps make.py -j 96 --ri -c "qsub -l h_vmem={params.h_vmem} -l bi
 '''
 
 import os
+import shutil
 
 # Paths
 DATA_DIR = 'data/'
@@ -38,11 +39,29 @@ rule download_genos:
 	log: LOG_DIR
 	shell: 'wget -O {output} ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/phase1/analysis_results/integrated_call_sets/ALL.chr{wildcards.CHR}.integrated_phase1_v3.20101123.snps_indels_svs.genotypes.vcf.gz'
 
+rule download_genos_Y_and_MT:
+	output: DATA_DIR + 'ALL.chr{CHR}.phase1_samtools_si.20101123.snps.low_coverage.genotypes.vcf.gz'
+	params: h_vmem = '8g', bigio = '0',
+            name = lambda wildcards: 'download_genos' + wildcards.CHR
+	log: LOG_DIR
+	shell: 'wget -O {output} ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/phase1/analysis_results/integrated_call_sets/ALL.chr{wildcards.CHR}.phase1_samtools_si.20101123.snps.low_coverage.genotypes.vcf.gz'
+
+rule rename_files:
+	input: expand(DATA_DIR + 'ALL.chr{CHR}.integrated_phase1_v3.20101123.snps_indels_svs.genotypes.vcf.gz', CHR = CHROM[:23]),
+               expand(DATA_DIR + 'ALL.chr{CHR}.phase1_samtools_si.20101123.snps.low_coverage.genotypes.vcf.gz', CHR = ['Y', 'MT'])
+	output: expand(DATA_DIR + 'genotypes_chr{CHR}.vcf.gz', CHR = CHROM)
+	params: h_vmem = '8g', bigio = '0',
+                name = 'rename_files'
+	log: LOG_DIR
+	run: 
+          for i in range(len(CHROM)):
+             shutil.move(input[i], output[i])
+
 rule extract_geno_and_af:
-	input: DATA_DIR + 'ALL.chr{CHR}.integrated_phase1_v3.20101123.snps_indels_svs.genotypes.vcf.gz'
+	input: DATA_DIR + 'genotypes_chr{CHR}.vcf.gz'
 	output: DATA_DIR + 'genotypes_chr{CHR}.txt.gz'
 	params: h_vmem = '8g', bigio = '0',
-            name = lambda wildcards: 'geno_to_bed.' + wildcards.CHR
+                name = lambda wildcards: 'geno_to_bed.' + wildcards.CHR
 	log: LOG_DIR
 	shell: 'vcftools --gzvcf {input} --get-INFO AF --get-INFO EUR_AF \
                 --get-INFO VT --stdout | gzip -c > {output}'
