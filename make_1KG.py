@@ -28,7 +28,7 @@ rule all:
 	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt'
 
 rule test:
-	input: DATA_DIR + 'ALL.chr22.integrated_phase1_v3.20101123.snps_indels_svs.genotypes.vcf.gz'
+	input: DATA_DIR + 'genotypes_chr22.bed'
 
 # Workflow
 rule download_genos:
@@ -38,15 +38,24 @@ rule download_genos:
 	log: LOG_DIR
 	shell: 'wget -O {output} ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/phase1/analysis_results/integrated_call_sets/ALL.chr{wildcards.CHR}.integrated_phase1_v3.20101123.snps_indels_svs.genotypes.vcf.gz'
 
+rule extract_geno_and_af:
+	input: DATA_DIR + 'ALL.chr{CHR}.integrated_phase1_v3.20101123.snps_indels_svs.genotypes.vcf.gz'
+	output: DATA_DIR + 'genotypes_chr{CHR}.txt.gz'
+	params: h_vmem = '8g', bigio = '0',
+            name = lambda wildcards: 'geno_to_bed.' + wildcards.CHR
+	log: LOG_DIR
+	shell: 'vcftools --gzvcf {input} --get-INFO AF --get-INFO EUR_AF \
+                --get-INFO VT --stdout | gzip -c > {output}'
+
 rule geno_to_bed:
-	input: DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
-	output: DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.bed'
+	input: DATA_DIR + 'genotypes_chr{CHR}.txt.gz'
+	output: DATA_DIR + 'genotypes_chr{CHR}.bed'
 	params: h_vmem = '8g', bigio = '0',
             name = lambda wildcards: 'geno_to_bed.' + wildcards.CHR
 	log: LOG_DIR
 	run:
           import gzip
-  
+
           # Open connection and skip header line
           geno = gzip.open(input[0], 'r')
           geno.readline()
@@ -57,18 +66,22 @@ rule geno_to_bed:
           # Read in genotypes and write out in bed format
           for g in geno:
               g = str(g, encoding='utf8')
-              g_cols = g.strip().split(' ')
-              chrom = g_cols[2]
-              start = str(int(g_cols[3]) - 1)
-              end = g_cols[3]
-              name = g_cols[0]
-              score = '0'
+              g_cols = g.strip().split('\t')
+              eur_af = g_cols[5]
+              variant_type = g_cols[6]
+              if eur_af == '?' or variant_type != 'SNP':
+                  continue
+              chrom = 'chr' + g_cols[0]
+              start = str(int(g_cols[1]) - 1)
+              end = g_cols[1]
+              name = g_cols[0] + '.' + g_cols[1]
+              score = g_cols[5]
               strand = '+'
               bed.write(chrom + '\t' + start + '\t' + end + '\t' + name + '\t' + score + '\t' + strand + '\n')
 
           geno.close()
           bed.close()
-    
+
 rule combine_genos:
 	input: expand(DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.bed', CHR = CHROM)
 	output: DATA_DIR + 'snps_ceu_hg18.bed'
