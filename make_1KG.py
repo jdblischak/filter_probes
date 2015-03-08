@@ -83,8 +83,8 @@ rule geno_to_bed:
           bed.close()
 
 rule combine_genos:
-	input: expand(DATA_DIR + 'genotypes_chr{CHR}_CEU_r28_nr.b36_fwd.bed', CHR = CHROM)
-	output: DATA_DIR + 'snps_ceu_hg18.bed'
+	input: expand(DATA_DIR + 'genotypes_chr{CHR}.bed', CHR = CHROM)
+	output: DATA_DIR + 'snps_EUR_1KG.bed'
 	params: h_vmem = '8g', bigio = '0',
             name = 'combine_genos'
 	log: LOG_DIR
