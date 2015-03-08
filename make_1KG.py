@@ -90,97 +90,6 @@ rule combine_genos:
 	log: LOG_DIR
 	shell: 'cat {input} > {output}'
 
-rule download_lift_over:
-	output: exec = SRC_DIR + 'liftOver',
-            chain = DATA_DIR + 'hg18ToHg19.over.chain.gz'
-	params: h_vmem = '8g', bigio = '0',
-            name = 'download_lift_over'
-	log: LOG_DIR
-	shell: '''
-        wget -O {output.exec} http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/liftOver
-        chmod +x {output.exec}
-        wget -O {output.chain} http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz
-        '''
-
-rule lift_over_genos:
-	input: genos = DATA_DIR + 'snps_ceu_hg18.bed',
-           chain = DATA_DIR + 'hg18ToHg19.over.chain.gz'
-	output: genos = DATA_DIR + 'snps_ceu_hg19.bed',
-            lost = DATA_DIR + 'snps_lost.txt'
-	params: h_vmem = '8g', bigio = '0',
-            name = 'lift_over_genos'
-	log: LOG_DIR
-	shell: '{SRC_DIR}liftOver {input.genos} {input.chain} {output.genos} {output.lost}'
-
-rule download_freqs:
-	output: DATA_DIR + 'allele_freqs_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
-	params: h_vmem = '8g', bigio = '0',
-            name = lambda wildcards: 'download_freqs' + wildcards.CHR
-	log: LOG_DIR
-	shell: 'wget -O {output} http://hapmap.ncbi.nlm.nih.gov/downloads/frequencies/2010-08_phaseII+III/allele_freqs_chr{wildcards.CHR}_CEU_r28_nr.b36_fwd.txt.gz'
-
-rule extract_freqs:
-	input: DATA_DIR + 'allele_freqs_chr{CHR}_CEU_r28_nr.b36_fwd.txt.gz'
-	output: DATA_DIR + 'allele_freqs_ceu_{CHR}.txt'
-	params: h_vmem = '8g', bigio = '0',
-            name = lambda wildcards: 'extract_freqs' + wildcards.CHR
-	log: LOG_DIR
-	run:
-          import gzip
-
-          # Open connection and skip header line
-          freq = gzip.open(input[0], 'r')
-          freq.readline()
-
-          # Open connection to output file
-          out = open(output[0], 'w')
-    
-          # Extract allele frequencies
-          for f in freq:
-              f = str(f, encoding='utf8')
-              f_cols = f.strip().split(' ')
-              out.write(f_cols[0] + '\t' + f_cols[11] + '\n')
-
-          freq.close()
-          out.close()
-
-rule combine_freqs:
-	input: expand(DATA_DIR + 'allele_freqs_ceu_{CHR}.txt', CHR = CHROM)
-	output: DATA_DIR + 'allele_freqs_ceu.txt'
-	params: h_vmem = '8g', bigio = '0',
-            name = 'combine_freqs'
-	log: LOG_DIR
-	shell: 'cat {input} > {output}'
-
-rule add_freqs:
-	input: genos = DATA_DIR + 'snps_ceu_hg19.bed',
-           freqs = DATA_DIR + 'allele_freqs_ceu.txt'
-	output: DATA_DIR + 'snps_ceu_hg19_af.bed'
-	params: h_vmem = '8g', bigio = '0',
-                name = 'add_freqs'
-	log: LOG_DIR
-	run:
-          freq = open(input.freqs, 'r')
-          geno = open(input.genos, 'r')
-    
-          # Open connection to output file
-          out = open(output[0], 'w')
-    
-          # Read in allele frequencies
-          d_freq = {}
-          for f in freq:
-              f_cols = f.strip().split('\t')
-              d_freq[f_cols[0]] = f_cols[1]
-
-          for g in geno:
-              g_cols = g.strip().split('\t')
-              af = d_freq.get(g_cols[3], 'NA')
-              out.write('\t'.join(g_cols[:4]) + '\t' + af + '\t' + g_cols[4] + '\n')
-
-          freq.close()
-          geno.close()
-          out.close()
-
 ################################################################################
 # Process probes
 ################################################################################
@@ -302,7 +211,7 @@ rule bam_to_bed:
 
 rule intersect_bed:
 	input: probes = DATA_DIR + 'ht12_probes.bed',
-               snps  = DATA_DIR + 'snps_ceu_hg19_af.bed'
+               snps  = DATA_DIR + 'snps_EUR_1KG.bed'
 	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
 	params: h_vmem = '8g', bigio = '0',
                 name = 'intersect_bed'
