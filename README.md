@@ -41,20 +41,19 @@ nohup snakemake -s make.py -c -j 30 -c "qsub -l h_vmem={params.h_vmem} -N {param
 
 For our analysis, we used a subset of the 47,321 probes designed to
 target genome of the Illumina HT-12v4 bead array that we determined
-were not affected by common SNPs in the HapMap CEU population. First,
+were not affected by common SNPs in the European population. First,
 we mapped the probes to human genome hg19 and kept only those with a
 quality score of 37 (40,198 probes; note that we also explicitly
 pre-filtered the 5,587 probes which were annotated as spanning
 exon-exon junctions to avoid mapping errors). Second, we downloaded
-the HapMap CEU SNPs
-(http://hapmap.ncbi.nlm.nih.gov/downloads/genotypes/2010-08_phaseII+III/forward/)
-and converted their coordinates from hg18 to hg19 using the UCSC
-liftOver utility. We kept only those probes which did not overlap any
-SNP with a minor allele frequency of at least 5% (34,508
+the phase 1 integrated call sets from the 1000 Genomes Project
+(ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/phase1/analysis_results/integrated_call_sets/).
+We kept only those probes which did not overlap any
+SNP with a minor allele frequency in the European population of at least 5% (33,494
 probes). Third, we converted the Illumina probe IDs to Ensembl gene
 IDs using the R/Bioconductor package biomaRt ([Durinck et al.,
 2009][Durinck2009]) and kept only those probes which are associated
-with exactly one Ensembl gene ID (Ensembl 75 - Feb 2014; 22,034
+with exactly one Ensembl gene ID (Ensembl 75 - Feb 2014; 21,676
 probes). The full pipeline was implemented using the Python package
 Snakemake ([Koster & Rahmann, 2012][Koster2012]).
 
@@ -67,9 +66,9 @@ Snakemake ([Koster & Rahmann, 2012][Koster2012]).
 * Number of probes mapped to hg19: 40198
 * Number of probes mapped uniquely to hg19: 37157
 * Number of probes mapped with quality score >= 37 to hg19: 35529
-* Number of probes mapped without a SNP ( MAF >= 0.05 ): 39133
-* Number of probes mapped with quality score >= 37 to hg19 and without a SNP ( MAF >= 0.05 ): 34508
-* Number of probes associated with a unique Ensembl gene ID: 22034
+* Number of probes mapped without a SNP ( MAF >= 0.05 ): 37903
+* Number of probes mapped with quality score >= 37 to hg19 and without a SNP ( MAF >= 0.05 ): 33494
+* Number of probes associated with a unique Ensembl gene ID: 21676
 
 ## Software
 
@@ -81,8 +80,9 @@ This analysis pipeline requires the following to be installed:
 * bedtools
 * R package argparse
 * R/Bioconductor package biomaRt
+* vcftools
 
 The pipeline installs the following:
 
 * bwa
-* liftOver
+
