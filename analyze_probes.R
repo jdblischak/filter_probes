@@ -64,7 +64,7 @@ test_snp_probe <- function(all_probes) {
                       Expect SNP %s to fall in probe %s",
                       test_snp[i], test_probe[i]))
     }
-  }  
+  }
 }
 
 ################################################################################
@@ -263,7 +263,7 @@ format_probes <- function(probes, problem_file = NULL) {
 if (!interactive()) {
   cline <- commandArgs(trailingOnly = TRUE)
 } else {
-  cline <- c("data/ht12_probes_snps_ceu_hg19_af_reduced.bed",
+  cline <- c("data/ht12_probes_snps_EUR_1KG_reduced_sorted.bed",
              "data/HumanHT-12_V4_0_R2_15002873_B.txt",
              "0.05", "37", "data/answer.txt")
 }
