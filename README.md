@@ -25,7 +25,7 @@ to your grid computing system. This will vary based on your
 setup. Here is an example using grid engine on my work cluster:
 
 ```
-snakemake -s make.py -c -j 30 -c "qsub -l h_vmem={params.h_vmem} -N {params.name} -V -j y -cwd -o {log}"
+snakemake -s make.py -j 30 -c "qsub -l h_vmem={params.h_vmem} -N {params.name} -V -j y -cwd -o {log}"
 ```
 
 This will submit up to 30 jobs at once, each requesting the virtual
@@ -34,7 +34,7 @@ can take hours to complete, I recommend submitting the job in the
 background immune to hangups, e.g.:
 
 ```
-nohup snakemake -s make.py -c -j 30 -c "qsub -l h_vmem={params.h_vmem} -N {params.name} -V -j y -cwd -o {log}" &
+nohup snakemake -s make.py -j 30 -c "qsub -l h_vmem={params.h_vmem} -N {params.name} -V -j y -cwd -o {log}" &
 ```
 
 ## Technical description
