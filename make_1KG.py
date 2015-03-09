@@ -271,7 +271,7 @@ rule intersect_bed:
 	input: probes = DATA_DIR + 'ht12_probes.bed',
                snps  = DATA_DIR + 'snps_EUR_1KG.bed'
 	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
-	params: h_vmem = '8g', bigio = '0',
+	params: h_vmem = '16g', bigio = '0',
                 name = 'intersect_bed'
 	log: LOG_DIR
 	shell: 'bedtools intersect -loj -a {input.probes} -b {input.snps} > {output}'
@@ -329,7 +329,7 @@ rule filter_probes:
                manifest = DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
 	output: probes = DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt',
                 problem = DATA_DIR + 'problem_probes.txt'
-	params: h_vmem = '8g', bigio = '0',
+	params: h_vmem = '12g', bigio = '0',
                 name = 'filter_probes'
 	log: LOG_DIR
 	shell: 'Rscript analyze_probes.R {input.probes} {input.manifest} {MAF} {MAP_SCORE} {output.probes} -p {output.problem}'
