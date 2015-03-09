@@ -58,11 +58,14 @@ test_snp_probe <- function(all_probes) {
   
   test_probe <- c("ILMN_2047240", "ILMN_2310685", "ILMN_2132898", "ILMN_2404154")
   test_snp <- c("rs6151429", "rs3794713", "rs1329151", "rs1303")
+  test_chr <- c("chr22", "chr17", "chr10", "chr14")
+  test_pos <- c(51063477, 80561616, 135234393, 94844843)
   for (i in seq_along(test_probe)) {
-    if(all_probes[probeID == test_probe[i], "snp"] != test_snp[i]) {
+    if(all_probes[probeID == test_probe[i], "chr_snp"] != test_chr[i] &
+       all_probes[probeID == test_probe[i], "end_snp"] != test_pos[i]) {
       warning(sprintf("Check versions of databases used.
-                      Expect SNP %s to fall in probe %s",
-                      test_snp[i], test_probe[i]))
+                      Expect SNP %s (%s: %d) to fall in probe %s",
+                      test_snp[i], test_chr[i], test_pos[i], test_probe[i]))
     }
   }
 }
