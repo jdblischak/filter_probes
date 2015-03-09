@@ -26,12 +26,17 @@ MAP_SCORE = 37 # Mapping quality score cutoff
 localrules: all
 
 rule all:
-	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt'
+	input: DATA_DIR + 'ht12_probes_snps_EUR_1KG_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt'
 
 rule test:
 	input: DATA_DIR + 'genotypes_chr22.bed'
 
 # Workflow
+
+################################################################################
+# Process SNPs
+################################################################################
+
 rule download_genos:
 	output: DATA_DIR + 'ALL.chr{CHR}.integrated_phase1_v3.20101123.snps_indels_svs.genotypes.vcf.gz'
 	params: h_vmem = '8g', bigio = '0',
@@ -270,7 +275,7 @@ rule bam_to_bed:
 rule intersect_bed:
 	input: probes = DATA_DIR + 'ht12_probes.bed',
                snps  = DATA_DIR + 'snps_EUR_1KG.bed'
-	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
+	output: DATA_DIR + 'ht12_probes_snps_EUR_1KG.bed'
 	params: h_vmem = '16g', bigio = '0',
                 name = 'intersect_bed'
 	log: LOG_DIR
@@ -285,8 +290,8 @@ rule intersect_bed:
 # (MAF). Thus for proper filtering, we need to only keep the SNP with
 # the highest MAF for each probe.
 rule reduce_probes:
-	input: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af.bed'
-	output: DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed'
+	input: DATA_DIR + 'ht12_probes_snps_EUR_1KG.bed'
+	output: DATA_DIR + 'ht12_probes_snps_EUR_1KG_reduced.bed'
 	params: h_vmem = '8g', bigio = '0',
                 name = 'reduce_probes'
 	log: LOG_DIR
@@ -325,9 +330,9 @@ rule reduce_probes:
           good.close()
 
 rule filter_probes:
-	input: probes = DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_reduced.bed',
+	input: probes = DATA_DIR + 'ht12_probes_snps_EUR_1KG_reduced.bed',
                manifest = DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
-	output: probes = DATA_DIR + 'ht12_probes_snps_ceu_hg19_af_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt',
+	output: probes = DATA_DIR + 'ht12_probes_snps_EUR_1KG_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt',
                 problem = DATA_DIR + 'problem_probes.txt'
 	params: h_vmem = '12g', bigio = '0',
                 name = 'filter_probes'
