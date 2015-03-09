@@ -279,7 +279,7 @@ rule intersect_bed:
 	params: h_vmem = '16g', bigio = '0',
                 name = 'intersect_bed'
 	log: LOG_DIR
-	shell: 'bedtools intersect -loj -a {input.probes} -b {input.snps} > {output}'
+	shell: 'bedtools intersect -loj -a {input.probes} -b {input.snps} | bedtools sort -i stdin > {output}'
 
 # After using bedtools intersect with the -loj flag, each probe is
 # included in the new file at least once. If there is no SNP in the
@@ -329,8 +329,18 @@ rule reduce_probes:
           probes.close()
           good.close()
 
+# The output from the Python dictionary is random. Thus to make
+# these files comparable across runs, sort by probe position.
+rule sort_probes:
+	input: DATA_DIR + 'ht12_probes_snps_EUR_1KG_reduced.bed'
+	output: DATA_DIR + 'ht12_probes_snps_EUR_1KG_reduced_sorted.bed'
+	params: h_vmem = '8g', bigio = '0',
+                name = 'sort_probes'
+	log: LOG_DIR
+	shell: 'bedtools sort -i {input} > {output}'
+
 rule filter_probes:
-	input: probes = DATA_DIR + 'ht12_probes_snps_EUR_1KG_reduced.bed',
+	input: probes = DATA_DIR + 'ht12_probes_snps_EUR_1KG_reduced_sorted.bed',
                manifest = DATA_DIR + 'HumanHT-12_V4_0_R2_15002873_B.txt'
 	output: probes = DATA_DIR + 'ht12_probes_snps_EUR_1KG_' + str(MAF) + '_map_' + str(MAP_SCORE) + '.txt',
                 problem = DATA_DIR + 'problem_probes.txt'
