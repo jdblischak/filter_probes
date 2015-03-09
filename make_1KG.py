@@ -55,13 +55,13 @@ rule rename_files:
 	log: LOG_DIR
 	run: 
           for i in range(len(CHROM)):
-             shutil.move(input[i], output[i])
+             shutil.copy(input[i], output[i])
 
 rule extract_geno_and_af:
 	input: DATA_DIR + 'genotypes_chr{CHR}.vcf.gz'
 	output: DATA_DIR + 'genotypes_chr{CHR}.txt.gz'
 	params: h_vmem = '8g', bigio = '0',
-                name = lambda wildcards: 'geno_to_bed.' + wildcards.CHR
+                name = lambda wildcards: 'extract_geno_and_af.' + wildcards.CHR
 	log: LOG_DIR
 	shell: 'vcftools --gzvcf {input} --get-INFO AF --get-INFO EUR_AF \
                 --get-INFO VT --stdout | gzip -c > {output}'
@@ -82,21 +82,60 @@ rule geno_to_bed:
           # Open connection to output file
           bed = open(output[0], 'w')
 
+          # VCF files for Y and M are completely different from
+          # the other chromosomes. Writing separate functions
+          # to process them.
+          def process_chr(g_cols, bed):
+              # Output as bed format.
+              # g_cols: list of columns from input file
+              # bed: handle to bed file
+
+              eur_af = g_cols[5]
+              variant_type = g_cols[6]
+              if eur_af == '?' or variant_type != 'SNP':
+                  return None
+              chrom = 'chr' + g_cols[0]
+              start = str(int(g_cols[1]) - 1)
+              end = g_cols[1]
+              name = chrom + '.' + end
+              score = g_cols[5]
+              strand = '+'
+              bed.write(chrom + '\t' + start + '\t' + end + '\t' + \
+                        name + '\t' + score + '\t' + strand + '\n')
+
+          def process_chr_Y_MT(g_cols, bed):
+              # Output as bed format.
+              # Only for Y and MT b/c they do not have allele frequency
+              # or variant type information.
+              # g_cols: list of columns from input file
+              # bed: handle to bed file
+
+              # Discard if not SNP
+              if len(g_cols[2]) != 1 or len(g_cols[3]) != 1:
+                  return None
+              # If MT, replace with M b/c that is name used by
+              # hg19.
+              if g_cols[0] == 'MT':
+                  chrom = 'chrM'
+              else:
+                  chrom = 'chr' + g_cols[0]
+              start = str(int(g_cols[1]) - 1)
+              end = g_cols[1]
+              name = chrom + '.' + end
+              score = str(0.5) # Assign them all allele frequency of 0.5
+                          # to be overly conservative.
+              strand = '+'
+              bed.write(chrom + '\t' + start + '\t' + end + '\t' + \
+                        name + '\t' + score + '\t' + strand + '\n')
+              
           # Read in genotypes and write out in bed format
           for g in geno:
               g = str(g, encoding='utf8')
               g_cols = g.strip().split('\t')
-              eur_af = g_cols[5]
-              variant_type = g_cols[6]
-              if eur_af == '?' or variant_type != 'SNP':
-                  continue
-              chrom = 'chr' + g_cols[0]
-              start = str(int(g_cols[1]) - 1)
-              end = g_cols[1]
-              name = g_cols[0] + '.' + g_cols[1]
-              score = g_cols[5]
-              strand = '+'
-              bed.write(chrom + '\t' + start + '\t' + end + '\t' + name + '\t' + score + '\t' + strand + '\n')
+              if g_cols[0] in ['Y', 'MT']:
+                  process_chr_Y_MT(g_cols, bed)
+              else:
+                  process_chr(g_cols, bed)
 
           geno.close()
           bed.close()
